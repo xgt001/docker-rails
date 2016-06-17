@@ -3,11 +3,12 @@
 FROM       ubuntu:14.04
 MAINTAINER Seyhun Akyurek "seyhunak@gmail.com"
 
+
 # Install dependency packages
 RUN apt-get update
 RUN apt-get upgrade -y
 RUN apt-get install -y software-properties-common
-RUN apt-get install -y make gcc wget openjdk-6-jre
+RUN apt-get install -y make gcc wget python-pip
 RUN apt-get install -y git
 RUN apt-get clean
 
@@ -32,23 +33,8 @@ RUN gem install rails-4.2.0.beta1
 # Install Curl and Node.js (for asset pipeline)
 RUN apt-get install -qq -y curl
 RUN apt-get install -qq -y nodejs
-
-# Install nginx
-RUN add-apt-repository -y ppa:nginx/stable
-RUN apt-get update
-RUN apt-get install -qq -y nginx
-RUN echo "daemon off;" >> /etc/nginx/nginx.conf
-RUN chown -R www-data:www-data /var/lib/nginx
-ADD nginx_sites.conf /etc/nginx/sites-enabled/default
-
 # Publish port 80
 EXPOSE 80
-
-# Start nginx when container starts
-ENTRYPOINT /usr/sbin/nginx
-
-# Install foreman
-RUN gem install foreman
 
 # Add default foreman config
 ADD Procfile /home/rails/Procfile
@@ -68,26 +54,12 @@ RUN gem install backburner
 # Add default unicorn config
 ADD backburner.rb /home/rails/config/initializers/backburner.rb
 
-# Install Solr
-RUN wget http://archive.apache.org/dist/lucene/solr/3.6.2/apache-solr-3.6.2.tgz -O /tmp/pkg.tar.gz
-RUN (cd /tmp && tar zxf pkg.tar.gz && mv apache-solr-* /opt/solr)
-RUN rm -rf /tmp/*
-ADD run.sh /usr/local/bin/run
-RUN chmod +x /usr/local/bin/run
-EXPOSE 8983
-CMD ["/usr/local/bin/run"]
-
-# Install Solr
-RUN gem install sunspot
-RUN gem install sunspot_solr
-RUN gem install sunspot_rails
-
 # Install MySQL (for mysql, mysql2 gem)
 RUN apt-get install -qq -y libmysqlclient-dev
 RUN gem install mysql2
 
 # Install Redis
-RUN apt-get install -qq -y python-pip redis-server
+RUN apt-get install -qq -y redis-server
 
 # Setting up Rails app
 WORKDIR /home/rails
